@@ -1,8 +1,10 @@
 # Simple telegram expense bot
 
 This bot 🦾 can record 📝 your expenses 📈 to database.
+
 So You can add your expenses 💰 to database using this format:
-*100 Taxi to home*
+
+`100 Taxi to home`
 
 ## Install:
 
