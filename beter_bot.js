@@ -7,6 +7,13 @@ const db = new Database('my_db.db', { verbose: console.log });
 
 let optionalParams = {
   parse_mode: 'MarkdownV2',
+  reply_markup: JSON.stringify({
+    inline_keyboard: [[
+      { text: 'Help', callback_data: 'help' },
+      { text: 'Statistic', callback_data: '/statistic' },
+      { text: 'Last', callback_data: '/last' },
+    ]]
+  })
 };
 
 const allowed_users = get_allowed_users();
@@ -16,7 +23,7 @@ You can add your expenses 💰 using this format:\n
 *_100 Taxi to home_*\n
 Commands:
 /statistic \\- Get statistics for 1 month 📆😱\n
-/last \\- To see & edit last 10 expenses 🔟\n
+/last \\- To see & edit last 🔟 expenses\n
 /categories \\- To see expenses 💰 categories 💭\n`
 
 slimbot.on('message', message => {
@@ -34,21 +41,21 @@ slimbot.on('message', message => {
       else if(message_obj.amount === "/statistic") {
         let row = get_statistics(message.from.id.toString())
         let text = print_statistics(row)
-        slimbot.sendMessage(message.chat.id, `📊Statistic for the last month: 📆\n` + text);
+        slimbot.sendMessage(message.chat.id, `📊 Statistic for the last month: 📆\n` + text);
       }
       else if(message_obj.amount === "/last") {
         let row = get_last_expenses(message.from.id)
         let text = print_last_expenses(row)
-        slimbot.sendMessage(message.chat.id, `Your last 10 expenses : 🔟\n` + text);
+        slimbot.sendMessage(message.chat.id, `Your last 🔟 expenses:\n` + text);
       }
       else if(message_obj.amount === "/categories") {
         let text = print_categories(row)
-        slimbot.sendMessage(message.chat.id, `Expense 💰 categories 💭:\n` + text);
+        slimbot.sendMessage(message.chat.id, `Expense 💰 categories:\n` + text);
       }
       else if(id_expense_for_delete) {
         let del_info = delete_expanse(id_expense_for_delete, message.from.id.toString())
         if(del_info.changes) {
-          slimbot.sendMessage(message.chat.id, `Expense deleted ${id_expense_for_delete} ❌`);
+          slimbot.sendMessage(message.chat.id, `Expense was deleted ${id_expense_for_delete} ✅`);
         }
         else {
           slimbot.sendMessage(message.chat.id, `⚠️Expense ${id_expense_for_delete} was NOT deleted⚠️`);
@@ -58,10 +65,30 @@ slimbot.on('message', message => {
     else {
       // let category = find_similar_category(message_obj, categories)
       insert_expenses(message_obj.amount, message_obj.expense + " " + message_obj.other, message.from.id.toString())
-      slimbot.sendMessage(message.chat.id, `Add ${message_obj.amount} ${message_obj.expense} ${message_obj.other}`);
+      slimbot.sendMessage(message.chat.id, `🆗 Add ${message_obj.amount} ${message_obj.expense} ${message_obj.other}`);
     }
   }
 });
+
+// Inline_keyboard callbacks
+slimbot.on('callback_query', query => {
+  if (query.data === 'help') {
+    slimbot.sendMessage(query.message.chat.id, help_text, optionalParams);
+  }
+});
+
+slimbot.on('callback_query', query => {
+  if (query.data === '/statistic') {
+    slimbot.sendMessage(query.message.chat.id, '📊 Statistic for the last month 📆:\n', optionalParams);
+  }
+});
+
+slimbot.on('callback_query', query => {
+  if (query.data === '/last') {
+    slimbot.sendMessage(query.message.chat.id, 'Your last 🔟 expenses:\n', optionalParams);
+  }
+});
+
 
 function insert_expenses(amount, info, who, category = 'other') {
   const row = db.prepare(`INSERT INTO expenses(date, amount, info, who, category) 
@@ -145,7 +172,7 @@ function find_similar_category(message_obj, categories) {
   return caterory
 }
 
-function get_statistics(id) {
+function get_statistics(id) { //! Add join to see who add expense
   const row = db.prepare(`SELECT * FROM expenses WHERE date > datetime('now', '-1 month') ORDER BY date DESC`).all();
   return row
 }
@@ -154,10 +181,10 @@ function print_statistics(rows) {
   let text = ''
   let summary = 0
   rows.map(r => {
-    text += `${r.amount}   _${r.info}_      ${r.date.split(' ')[0]}\n`
+    text += `${r.amount}   ${r.info}      ${r.date.split(' ')[0]}\n`
     summary += r.amount
   })
-  return text + `Summary: *${summary}* ❗️⚠️`
+  return text + `Summary: ${summary} ❗️`
 }
 
 function get_last_expenses(id) {
