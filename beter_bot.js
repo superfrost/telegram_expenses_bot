@@ -6,12 +6,12 @@ const Database = require('better-sqlite3');
 const db = new Database('my_db.db', { verbose: console.log });
 
 let optionalParams = {
-  parse_mode: 'MarkdownV2',
   reply_markup: JSON.stringify({
     inline_keyboard: [[
       { text: 'Help', callback_data: 'help' },
       { text: 'Statistic', callback_data: '/statistic' },
-      { text: 'Last', callback_data: '/last' },
+      { text: 'Last 10', callback_data: '/last' },
+      { text: 'Categories', callback_data: '/categories' },
     ]]
   })
 };
@@ -39,7 +39,7 @@ slimbot.on('message', message => {
         slimbot.sendMessage(message.chat.id, help_text, optionalParams);
       }
       else if(message_obj.amount === "/statistic") {
-        let row = get_statistics(message.from.id.toString())
+        let row = get_statistics(message.chat.id.toString())
         let text = print_statistics(row)
         slimbot.sendMessage(message.chat.id, `📊 Statistic for the last month: 📆\n` + text);
       }
@@ -49,7 +49,7 @@ slimbot.on('message', message => {
         slimbot.sendMessage(message.chat.id, `Your last 🔟 expenses:\n` + text);
       }
       else if(message_obj.amount === "/categories") {
-        let text = print_categories(row)
+        let text = print_categories(categories)
         slimbot.sendMessage(message.chat.id, `Expense 💰 categories:\n` + text);
       }
       else if(id_expense_for_delete) {
@@ -60,6 +60,9 @@ slimbot.on('message', message => {
         else {
           slimbot.sendMessage(message.chat.id, `⚠️Expense ${id_expense_for_delete} was NOT deleted⚠️`);
         }
+      }
+      else { // If user send what we don't understand
+        slimbot.sendMessage(message.chat.id, `OK. Try this command`, optionalParams);
       }
     }
     else {
@@ -79,14 +82,24 @@ slimbot.on('callback_query', query => {
 
 slimbot.on('callback_query', query => {
   if (query.data === '/statistic') {
-    slimbot.sendMessage(query.message.chat.id, '📊 Statistic for the last month 📆:\n', optionalParams);
+    let row = get_statistics(query.message.chat.id.toString())
+    let text = print_statistics(row)
+    slimbot.sendMessage(query.message.chat.id, '📊 Statistic for the last month 📆:\n' + text, optionalParams);
   }
 });
 
 slimbot.on('callback_query', query => {
   if (query.data === '/last') {
-    slimbot.sendMessage(query.message.chat.id, 'Your last 🔟 expenses:\n', optionalParams);
+    let row = get_last_expenses(query.message.chat.id.toString())
+    let text = print_last_expenses(row)
+    slimbot.sendMessage(query.message.chat.id, 'Your last 🔟 expenses:\n' + text, optionalParams);
   }
+});
+
+slimbot.on('callback_query', query => {
+  if (query.data === '/categories') {
+    let text = print_categories(categories)
+    slimbot.sendMessage(query.message.chat.id, `Expense 💰 categories:\n` + text);  }
 });
 
 
@@ -155,21 +168,27 @@ function delete_expanse(expense_id, user_id) {
 }
 
 function get_allowed_users() {
-  const row = db.prepare('SELECT * FROM allowed_users').all();
-  return row
+  const rows = db.prepare('SELECT * FROM allowed_users').all();
+  return rows
 }
 
 function get_categories() {
-  const row = db.prepare('SELECT * FROM category').all();
-  console.log(row);
-  return row
+  const rows = db.prepare('SELECT * FROM category').all();
+  console.log(rows);
+  return rows
+}
+
+function print_categories(rows) {
+  let text = ''
+  rows.map(r => text += `${r.name}:   ${r.alias}\n`)
+  return text
 }
 
 function find_similar_category(message_obj, categories) {
   let category = categories
   let user_caterogy = message_obj[1]
   
-  return caterory
+  return category
 }
 
 function get_statistics(id) { //! Add join to see who add expense

@@ -21,8 +21,14 @@ Add telegram bot token to `.env` file
 
 ## Bot commands:
 
+#### Use inlinekeyboard or push or print this commands:
+
+*/start* *help* *Help* - To get help
+
 */statistic* - Get statistics for 1 month 📆
+
 */last* - To see & edit last 🔟 expenses
+
 */categories* - To see expenses 💰 categories
 
 # License
