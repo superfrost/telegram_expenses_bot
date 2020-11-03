@@ -12,6 +12,7 @@ let optionalParams = {
       { text: 'Statistic', callback_data: '/statistic' },
       { text: 'Last 10', callback_data: '/last' },
       { text: 'Categories', callback_data: '/categories' },
+      { text: 'Delete', callback_data: '/delete' },
     ]]
   })
 };
@@ -90,8 +91,8 @@ slimbot.on('callback_query', query => {
 
 slimbot.on('callback_query', query => {
   if (query.data === '/last') {
-    let row = get_last_expenses(query.message.chat.id.toString())
-    let text = print_last_expenses(row)
+    let rows = get_last_expenses(query.message.chat.id.toString())
+    let text = print_last_expenses(rows)
     slimbot.sendMessage(query.message.chat.id, 'Your last 🔟 expenses:\n' + text, optionalParams);
   }
 });
@@ -100,6 +101,44 @@ slimbot.on('callback_query', query => {
   if (query.data === '/categories') {
     let text = print_categories(categories)
     slimbot.sendMessage(query.message.chat.id, `Expense 💰 categories:\n` + text);  }
+});
+
+slimbot.on('callback_query', query => {
+  if (query.data === '/delete') {
+    let rows = get_last_expenses(query.message.chat.id.toString())
+    let text = print_last_expenses(rows)
+
+    let delete_inline_keys = {
+      reply_markup: JSON.stringify({
+        inline_keyboard: [[
+          { text: `Del_${rows[0].id}`, callback_data: `/delete_${rows[0].id}` },
+          { text: `Del_${rows[1].id}`, callback_data: `/delete_${rows[1].id}` },
+          { text: `Del_${rows[2].id}`, callback_data: `/delete_${rows[2].id}` },
+          { text: `Del_${rows[3].id}`, callback_data: `/delete_${rows[3].id}` },
+          { text: `Del_${rows[4].id}`, callback_data: `/delete_${rows[4].id}` },
+        ],[
+          { text: `Del_${rows[5].id}`, callback_data: `/delete_${rows[5].id}` },
+          { text: `Del_${rows[6].id}`, callback_data: `/delete_${rows[6].id}` },
+          { text: `Del_${rows[7].id}`, callback_data: `/delete_${rows[7].id}` },
+          { text: `Del_${rows[8].id}`, callback_data: `/delete_${rows[8].id}` },
+          { text: `Del_${rows[9].id}`, callback_data: `/delete_${rows[9].id}` },
+        ]]
+      })
+    };
+    slimbot.sendMessage(query.message.chat.id, `Your last 🔟 expenses:\n` + text, delete_inline_keys);  }
+});
+
+slimbot.on('callback_query', query => {
+  let del_id = find_del_id_callback(query.data)
+  if (del_id) {
+    let del_info = delete_expanse(del_id, query.message.from.id.toString())
+    if(del_info.changes) {
+      slimbot.sendMessage(query.message.chat.id, `Expense was deleted ${del_id} ✅`);
+    }
+    else {
+      slimbot.sendMessage(query.message.chat.id, `⚠️Expense ${del_id} was NOT deleted⚠️`);
+    }
+  }
 });
 
 
@@ -160,10 +199,20 @@ function find_del_id_command(text) { // function return false if not find any ma
   }
 }
 
+function find_del_id_callback(text) { // function return false if not find any matches or return id of expense which must be deleted
+  let result = text.split(/^\/delete_/); // if matched result = ['', 'id_number']
+  if(result[0]) {
+    return false
+  }
+  else {
+    return result[1]
+  }
+}
+
 function delete_expanse(expense_id, user_id) {
   console.log('expense_id:', expense_id, 'user_id:', user_id);
   const del_info = db.prepare('DELETE FROM expenses WHERE (id = ? AND who = ?)').run(expense_id, user_id);
-  console.log(del_info);
+  // console.log(del_info);
   return del_info
 }
 
@@ -213,7 +262,7 @@ function get_last_expenses(id) {
 
 function print_last_expenses(rows) {
   let text = ''
-  rows.map(r => text += `${r.amount}   ${r.info}  -  ✖️Delete /del_${r.id}\n\n`)
+  rows.map(r => text += `${r.amount}   ${r.info}  -  ✖️Delete /del_${r.id}\n`)
   return text
 }
 
