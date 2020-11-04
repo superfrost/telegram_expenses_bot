@@ -7,12 +7,13 @@ git clone https://github.com/superfrost/telegram_expenses_bot.git telegram_expen
 cd telegram_expenses_bot
 npm install
 
-read -p 'Enter your Telegram Token: ' telegram_token
-echo "TELEGRAM_TOKEN=$telegram_token" > .env
-
 echo "Creating database"
 sqlite3 my_db.db < create_db.sql
 
+echo "Creating Telegram Token"
+read -p 'Enter your Telegram Token: ' telegram_token
+echo "TELEGRAM_TOKEN=$telegram_token" > .env
+
 # if you have installed pm2
-pm2 start beter_bot.js
-pm2 save
+# pm2 start beter_bot.js
+# pm2 save
