@@ -3,7 +3,7 @@
 echo "Start installation of telegram_expenses_bot"
 cd $HOME
 echo "Cloning telegram_expenses_bot from GitHub"
-git clone https://github.com/superfrost/telegram_expenses_bot.git
+git clone https://github.com/superfrost/telegram_expenses_bot.git telegram_expenses_bot
 cd telegram_expenses_bot
 npm install
 
