@@ -4,7 +4,7 @@ echo "Start installation of telegram_expenses_bot"
 cd $HOME
 echo "Cloning telegram_expenses_bot from GitHub"
 git clone https://github.com/superfrost/telegram_expenses_bot.git
-cd telegram_bot_expenses
+cd telegram_expenses_bot
 npm install
 
 read -p 'Enter your Telegram Token: ' telegram_token
