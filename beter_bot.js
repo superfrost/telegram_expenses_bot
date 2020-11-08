@@ -12,7 +12,6 @@ let optionalParams = {
       { text: 'Statistic', callback_data: '/statistic' },
       { text: 'Last 10', callback_data: '/last' },
       { text: 'Categories', callback_data: '/categories' },
-      { text: 'Delete', callback_data: '/delete' },
     ]]
   })
 };
@@ -21,21 +20,22 @@ const allowed_users = get_allowed_users();
 const categories = get_categories();
 const help_text = `It is bot 🦾 for recording 📝 expenses 📈
 You can add your expenses 💰 using this format:\n
-*_100 Taxi to home_*\n
+100 Taxi to home\n
 Commands:
-/statistic \\- Get statistics for 1 month 📆😱\n
-/last \\- To see & edit last 🔟 expenses\n
-/categories \\- To see expenses 💰 categories 💭\n`
+/statistic - Get statistics for 1 month 📆😱\n
+/last - To see & edit last 🔟 expenses\n
+/categories - To see expenses 💰 categories 💭\n
+Or use inline keyboard below`
 
 slimbot.on('message', message => {
   let auth = authentificate(message.from.id, allowed_users)
   if(!auth) {
     slimbot.sendMessage(message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${message.from.id})`);
   }
-  else {
+  else { // if user isAuth
     let message_obj = parse_income_message(message.text)
     let id_expense_for_delete = find_del_id_command(message_obj.amount)
-    if(isNaN(message_obj.amount * 1)) {
+    if(isNaN(message_obj.amount * 1)) { // if first group of symbols is text
       if(message_obj.amount === "help" || message_obj.amount === "Help" || message_obj.amount === "/start" ) {
         slimbot.sendMessage(message.chat.id, help_text, optionalParams);
       }
@@ -62,7 +62,7 @@ slimbot.on('message', message => {
           slimbot.sendMessage(message.chat.id, `⚠️Expense ${id_expense_for_delete} was NOT deleted⚠️`);
         }
       }
-      else { // If user send what we don't understand
+      else { // If user send what we don't understand (some garbage)
         slimbot.sendMessage(message.chat.id, `OK. Try this command`, optionalParams);
       }
     }
@@ -100,47 +100,9 @@ slimbot.on('callback_query', query => {
 slimbot.on('callback_query', query => {
   if (query.data === '/categories') {
     let text = print_categories(categories)
-    slimbot.sendMessage(query.message.chat.id, `Expense 💰 categories:\n` + text);  }
-});
-
-slimbot.on('callback_query', query => {
-  if (query.data === '/delete') {
-    let rows = get_last_expenses(query.message.chat.id.toString())
-    let text = print_last_expenses(rows)
-
-    let delete_inline_keys = {
-      reply_markup: JSON.stringify({
-        inline_keyboard: [[
-          { text: `Del_${rows[0].id}`, callback_data: `/delete_${rows[0].id}` },
-          { text: `Del_${rows[1].id}`, callback_data: `/delete_${rows[1].id}` },
-          { text: `Del_${rows[2].id}`, callback_data: `/delete_${rows[2].id}` },
-          { text: `Del_${rows[3].id}`, callback_data: `/delete_${rows[3].id}` },
-          { text: `Del_${rows[4].id}`, callback_data: `/delete_${rows[4].id}` },
-        ],[
-          { text: `Del_${rows[5].id}`, callback_data: `/delete_${rows[5].id}` },
-          { text: `Del_${rows[6].id}`, callback_data: `/delete_${rows[6].id}` },
-          { text: `Del_${rows[7].id}`, callback_data: `/delete_${rows[7].id}` },
-          { text: `Del_${rows[8].id}`, callback_data: `/delete_${rows[8].id}` },
-          { text: `Del_${rows[9].id}`, callback_data: `/delete_${rows[9].id}` },
-        ]]
-      })
-    };
-    slimbot.sendMessage(query.message.chat.id, `Your last 🔟 expenses:\n` + text, delete_inline_keys);  }
-});
-
-slimbot.on('callback_query', query => {
-  let del_id = find_del_id_callback(query.data)
-  if (del_id) {
-    let del_info = delete_expanse(del_id, query.message.from.id.toString())
-    if(del_info.changes) {
-      slimbot.sendMessage(query.message.chat.id, `Expense was deleted ${del_id} ✅`);
-    }
-    else {
-      slimbot.sendMessage(query.message.chat.id, `⚠️Expense ${del_id} was NOT deleted⚠️`);
-    }
+    slimbot.sendMessage(query.message.chat.id, `Expense 💰 categories:\n` + text, optionalParams)
   }
 });
-
 
 function insert_expenses(amount, info, who, category = 'other') {
   const row = db.prepare(`INSERT INTO expenses(date, amount, info, who, category) 
@@ -191,16 +153,6 @@ function parse_income_message(message_text) {
 
 function find_del_id_command(text) { // function return false if not find any matches or return id of expense which must be deleted
   let result = text.split(/^\/del_/); // if matched result = ['', 'id_number']
-  if(result[0]) {
-    return false
-  }
-  else {
-    return result[1]
-  }
-}
-
-function find_del_id_callback(text) { // function return false if not find any matches or return id of expense which must be deleted
-  let result = text.split(/^\/delete_/); // if matched result = ['', 'id_number']
   if(result[0]) {
     return false
   }
@@ -262,7 +214,7 @@ function get_last_expenses(id) {
 
 function print_last_expenses(rows) {
   let text = ''
-  rows.map(r => text += `${r.amount}   ${r.info}  -  ✖️Delete /del_${r.id}\n`)
+  rows.map(r => text += `${r.amount}   ${r.info}  -  ✖️Delete /del_${r.id}\n\n`)
   return text
 }
 
