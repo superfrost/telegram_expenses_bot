@@ -1,9 +1,9 @@
 require('dotenv').config();
 const Slimbot = require('slimbot');
 const slimbot = new Slimbot(process.env.TELEGRAM_TOKEN);
-const chalk = require('chalk')
 const Database = require('better-sqlite3');
 const db = new Database('my_db.db', { verbose: console.log });
+const updateBot = require('./updateBot');
 
 let optionalParams = {
   reply_markup: JSON.stringify({
@@ -218,10 +218,6 @@ function print_last_expenses(rows) {
   let text = ''
   rows.map(r => text += `${r.amount}   ${r.info} ${r.date}  - ✖/del_${r.id}\n\n`)
   return text
-}
-
-function updateBot() {
-  console.log('Bot updated');
 }
 
 slimbot.startPolling();
