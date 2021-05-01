@@ -28,7 +28,7 @@ Commands:
 Or use inline keyboard below`
 
 slimbot.on('message', message => {
-  let auth = authentificate(message.from.id, allowed_users)
+  let auth = authenticate(message.from.id, allowed_users)
   if(!auth) {
     slimbot.sendMessage(message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${message.from.id})`);
   }
@@ -52,6 +52,10 @@ slimbot.on('message', message => {
       else if(message_obj.amount === "/categories") {
         let text = print_categories(categories)
         slimbot.sendMessage(message.chat.id, `Expense 💰 categories:\n` + text);
+      }
+      else if(message_obj.amount === "/update") {
+        slimbot.sendMessage(message.chat.id, `Updating Bot\n`);
+        updateBot()
       }
       else if(id_expense_for_delete) {
         let del_info = delete_expanse(id_expense_for_delete, message.from.id.toString())
@@ -110,7 +114,7 @@ function insert_expenses(amount, info, who, category = 'other') {
   .run(amount, info, who, category)
 }
 
-function authentificate(id, allowed_users = []) {
+function authenticate(id, allowed_users = []) {
   if(!allowed_users.length) { 
     let result = hardcode_check(id)
     return result
@@ -164,7 +168,6 @@ function find_del_id_command(text) { // function return false if not find any ma
 function delete_expanse(expense_id, user_id) {
   console.log('expense_id:', expense_id, 'user_id:', user_id);
   const del_info = db.prepare('DELETE FROM expenses WHERE (id = ? AND who = ?)').run(expense_id, user_id);
-  // console.log(del_info);
   return del_info
 }
 
@@ -188,12 +191,11 @@ function print_categories(rows) {
 function find_similar_category(message_obj, categories) {
   let category = categories
   let user_caterogy = message_obj[1]
-  
   return category
 }
 
 function get_statistics(id) { //! Add join to see who add expense
-  const row = db.prepare(`SELECT * FROM expenses WHERE date > datetime('now', '-1 month') ORDER BY date DESC`).all();
+  const row = db.prepare(`SELECT * FROM expenses WHERE date > datetime('now', 'start of month') ORDER BY date DESC`).all();
   return row
 }
 
@@ -214,8 +216,12 @@ function get_last_expenses(id) {
 
 function print_last_expenses(rows) {
   let text = ''
-  rows.map(r => text += `${r.amount}   ${r.info}  -  ✖️Delete /del_${r.id}\n\n`)
+  rows.map(r => text += `${r.amount}   ${r.info} ${r.date}  - ✖/del_${r.id}\n\n`)
   return text
+}
+
+function updateBot() {
+  console.log('Bot updated');
 }
 
 slimbot.startPolling();
