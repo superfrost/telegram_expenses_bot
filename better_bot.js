@@ -5,6 +5,7 @@ const Database = require('better-sqlite3');
 const db = new Database('my_db.db', { verbose: console.log });
 const updateBot = require('./updateBot');
 
+//! test for...
 let optionalParams = {
   reply_markup: JSON.stringify({
     inline_keyboard: [[
