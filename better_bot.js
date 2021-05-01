@@ -26,7 +26,7 @@ Commands:
 /statistic - Get statistics for 1 month 📆😱\n
 /last - To see & edit last 🔟 expenses\n
 /categories - To see expenses 💰 categories 💭\n
-Or use inline keyboard below!`
+Or use inline keyboard below!!`
 
 slimbot.on('message', message => {
   let auth = authenticate(message.from.id, allowed_users)
