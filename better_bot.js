@@ -5,7 +5,9 @@ const Database = require('better-sqlite3');
 const db = new Database('my_db.db', { verbose: console.log });
 const updateBot = require('./updateBot');
 
-//! test for...
+// Init tables if not exists
+initDbTables();
+
 let optionalParams = {
   reply_markup: JSON.stringify({
     inline_keyboard: [[
@@ -25,13 +27,13 @@ You can add your expenses 💰 using this format:\n
 Commands:
 /statistic - Get statistics for 1 month 📆😱\n
 /last - To see & edit last 🔟 expenses\n
-/categories - To see expenses 💰 categories 💭\n
-Or use inline keyboard below!!`
+/categories - To see expenses 💰 categories 💭\n`
 
 slimbot.on('message', message => {
   let auth = authenticate(message.from.id, allowed_users)
   if(!auth) {
     slimbot.sendMessage(message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${message.from.id})`);
+    return
   }
   else { // if user isAuth
     let message_obj = parse_income_message(message.text)
@@ -80,8 +82,17 @@ slimbot.on('message', message => {
 });
 
 // Inline_keyboard callbacks
+// TODO Implement authentication
 slimbot.on('callback_query', query => {
   if (query.data === 'help') {
+    
+    let auth = authenticate(query.message.from.id, allowed_users)
+    console.log('Help call');
+    if(!auth) {
+      slimbot.sendMessage(query.message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${query.message.from.id})`);
+      return
+    }
+
     slimbot.sendMessage(query.message.chat.id, help_text, optionalParams);
   }
 });
@@ -116,25 +127,13 @@ function insert_expenses(amount, info, who, category = 'other') {
 }
 
 function authenticate(id, allowed_users = []) {
-  if(!allowed_users.length) { 
-    let result = hardcode_check(id)
-    return result
+  if(allowed_users.length === 0) { 
+    return false
   }
-  else {
-    let result = soft_check(id, allowed_users)
-    return result
-  }
+  let result = user_check(id, allowed_users)
+  return result
 
-  function hardcode_check(id) { //function return 0 if user NOT authenticated and return 1 if user is authenticated
-    if((id !== 1148338977) && (id !== 1288969133)) {
-      return false
-    }
-    else {
-      return true
-    }
-  }
-
-  function soft_check(id, allowed_users) { //function return 0 if user NOT authenticated and return 1 if user is authenticated
+  function user_check(id, allowed_users) { //function return 0 if user NOT authenticated and return 1 if user is authenticated
     let allowed = allowed_users.filter(user => user.user_id === id)
     if(!allowed.length) {
       return false
@@ -174,6 +173,7 @@ function delete_expanse(expense_id, user_id) {
 
 function get_allowed_users() {
   const rows = db.prepare('SELECT * FROM allowed_users').all();
+  console.log(rows);
   return rows
 }
 
@@ -219,6 +219,27 @@ function print_last_expenses(rows) {
   let text = ''
   rows.map(r => text += `${r.amount}   ${r.info} ${r.date}  - ✖/del_${r.id}\n\n`)
   return text
+}
+
+function initDbTables() {
+  db.prepare('CREATE TABLE IF NOT EXISTS amount(id INTEGER PRIMARY KEY NOT NULL, name INTEGER NOT NULL)').run();
+  db.prepare('CREATE TABLE IF NOT EXISTS allowed_users(user_id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL)').run();
+  db.prepare('CREATE TABLE IF NOT EXISTS category(name TEXT PRIMARY KEY NOT NULL, important INTEGER NOT NULL, alias TEXT)').run();
+  db.prepare('CREATE TABLE IF NOT EXISTS expenses(id INTEGER PRIMARY KEY NOT NULL, date TEXT NOT NULL, amount INTEGER NOT NULL, info TEXT NOT NULL, who INTEGER NOT NULL REFERENCES allowed_users(user_id), category TEXT REFERENCES category(name))').run();
+  
+  db.prepare('INSERT OR IGNORE INTO amount(id, name) VALUES(0, 20000)').run();
+  db.prepare("INSERT OR IGNORE INTO category (name, important, alias) VALUES('products', 1, 'prod, food, eat, eats, burger, kfc, mac, products'), ('transport', 1, 'taxi, metro, bus, train, plane, transport, travel'), ('phone', 1, 'phone, wifi, wi-fi, internet, inet'), ('clothes', 0, 'clothes, dress, boots, shoes'), ('ecomerse', 0, 'ali, aliexpres, aliexpress, eshop'), ('other', 0, 'any');").run();
+  
+  //Test users
+  db.prepare("INSERT OR IGNORE INTO allowed_users(user_id, name) VALUES(1248575236, 'Anton'), (1148338977, 'Anton'), (1288969133, 'Lera')").run();
+  //Test expenses
+  // db.prepare("INSERT OR IGNORE INTO expenses(date, amount, info, who, category) VALUES('2020-10-31 20:14:41',350,'taxi to home',1148338977,'transport')").run();
+
+  const allowed_users = get_allowed_users();
+
+  if (allowed_users === null || allowed_users.length === 0) {
+    console.log('\033[0;33m You need to add at least one user to "allowed_users" table inside expenses db ("my_db.db") \033[m');
+  }
 }
 
 slimbot.startPolling();

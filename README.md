@@ -4,7 +4,7 @@ This bot 🦾 can record 📝 your expenses 📈 to database.
 
 So You can add your expenses 💰 to database using this format:
 
-`100 Taxi to home`
+`100 Taxi to home` or `250 burger`
 
 ## Install:
 
@@ -26,20 +26,14 @@ cd $HOME
 git clone https://github.com/superfrost/telegram_expenses_bot.git
 cd telegram_expenses_bot
 npm install
-sqlite3 my_db.db < create_db.sql
+npm update
 echo 'TELEGRAM_TOKEN=' > .env
 nano .env
 ```
 
 ### Warning
 
-You need to have installed `sqlite3` and `pm2`
-
-To install `sqlite3` type this command (in Debian, Ubuntu):
-
-```bash
-apt install sqlite3
-```
+You need to have installed `pm2`
 
 To install `pm2` type this command (in Debian, Ubuntu) from telegram_expenses_bot directory:
 
@@ -49,7 +43,7 @@ npm install -g pm2
 
 ## Don't forget 
 
-Add telegram bot token to `.env` file 
+Add telegram bot token to `.env` file: `echo 'TELEGRAM_TOKEN=YOUR_TOKEN_HERE' > .env`
 
 ## Bot commands:
 
@@ -62,6 +56,14 @@ Add telegram bot token to `.env` file
 `/last` - To see & edit last 🔟 expenses
 
 `/categories` - To see expenses 💰 categories
+
+`/update` - To update bot from this repository
+
+## Starting bot by PM2:
+
+to start server use this command: `pm2 start ecosystem.config.js`
+
+to stop use this command: `pm2 stop tbot --watch`
 
 # License
 
