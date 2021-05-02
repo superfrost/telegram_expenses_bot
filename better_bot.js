@@ -2,7 +2,7 @@ require('dotenv').config();
 const Slimbot = require('slimbot');
 const slimbot = new Slimbot(process.env.TELEGRAM_TOKEN);
 const Database = require('better-sqlite3');
-const db = new Database('my_db.db', { verbose: console.log });
+const db = new Database('expanses_db.db', { verbose: console.log });
 const updateBot = require('./updateBot');
 
 // Init tables if not exists
@@ -85,11 +85,11 @@ slimbot.on('message', message => {
 // TODO Implement authentication
 slimbot.on('callback_query', query => {
   if (query.data === 'help') {
+    // console.log(query.message);
     
-    let auth = authenticate(query.message.from.id, allowed_users)
-    console.log('Help call');
+    let auth = authenticate(query.message.chat.id, allowed_users)
     if(!auth) {
-      slimbot.sendMessage(query.message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${query.message.from.id})`);
+      slimbot.sendMessage(query.message.chat.id, `You are not authorized 🎭👤🔒 (your id: ${query.message.chat.id})`);
       return
     }
 
@@ -231,14 +231,14 @@ function initDbTables() {
   db.prepare("INSERT OR IGNORE INTO category (name, important, alias) VALUES('products', 1, 'prod, food, eat, eats, burger, kfc, mac, products'), ('transport', 1, 'taxi, metro, bus, train, plane, transport, travel'), ('phone', 1, 'phone, wifi, wi-fi, internet, inet'), ('clothes', 0, 'clothes, dress, boots, shoes'), ('ecomerse', 0, 'ali, aliexpres, aliexpress, eshop'), ('other', 0, 'any');").run();
   
   //Test users
-  db.prepare("INSERT OR IGNORE INTO allowed_users(user_id, name) VALUES(1248575236, 'Anton'), (1148338977, 'Anton'), (1288969133, 'Lera')").run();
+  // db.prepare("INSERT OR IGNORE INTO allowed_users(user_id, name) VALUES(1148338977, 'Anton'), (1288969133, 'Lera')").run();
   //Test expenses
   // db.prepare("INSERT OR IGNORE INTO expenses(date, amount, info, who, category) VALUES('2020-10-31 20:14:41',350,'taxi to home',1148338977,'transport')").run();
 
   const allowed_users = get_allowed_users();
 
   if (allowed_users === null || allowed_users.length === 0) {
-    console.log('\033[0;33m You need to add at least one user to "allowed_users" table inside expenses db ("my_db.db") \033[m');
+    console.log('\033[0;33m You need to add at least one user to "allowed_users" table inside expenses db ("expanses_db.db") \033[m');
   }
 }
 
